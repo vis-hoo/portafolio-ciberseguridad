@@ -1,0 +1,15 @@
+{
+  "name": "banco-internacional-web",
+  "version": "1.0.0",
+  "description": "Aplicación web bancaria del proyecto EV-2",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "oracledb": "^6.6.0"
+  }
+}

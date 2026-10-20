@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banco Internacional</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="contenedor">
+      <a href="/" class="marca">Banco Internacional</a>
+      <nav class="navegacion">
+        <a href="/#servicios">Servicios</a>
+        <a href="/#nosotros">Nosotros</a>
+        <a href="/#contacto">Contacto</a>
+        <a href="/login" class="accion">Ingresar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="portada">
+      <div class="contenedor">
+        <h1>Su patrimonio, bien gestionado</h1>
+        <p class="entradilla">Banco Internacional opera cuentas corrientes, créditos y servicios de ahorro para personas y empresas desde 1974.</p>
+        <a href="/login" class="boton">Acceder a su cuenta</a>
+
+        <div class="cifras">
+          <div><span class="valor">40.000</span><span class="rotulo">clientes</span></div>
+          <div><span class="valor">22</span><span class="rotulo">sucursales</span></div>
+          <div><span class="valor">8,75%</span><span class="rotulo">tasa anual desde</span></div>
+          <div><span class="valor">1974</span><span class="rotulo">año de fundación</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="servicios" class="seccion">
+      <div class="contenedor">
+        <h2>Servicios</h2>
+        <div class="rejilla-servicios">
+          <article>
+            <h3>Cuenta corriente</h3>
+            <p>Movimientos ilimitados, transferencias y tarjeta de débito sin costo de mantención durante el primer año.</p>
+          </article>
+          <article>
+            <h3>Créditos</h3>
+            <p>Créditos de consumo, vehiculares e hipotecarios, con tasas desde 8,75% anual y plazos hasta 60 meses.</p>
+          </article>
+          <article>
+            <h3>Ahorro</h3>
+            <p>Depósitos a plazo y cuentas de ahorro programado para objetivos de mediano y largo plazo.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="nosotros" class="seccion campo-oscuro">
+      <div class="contenedor columnas">
+        <div>
+          <h2>Quiénes somos</h2>
+          <p>Banco Internacional atiende a más de 40.000 clientes en el país. Nuestra operación se concentra en la banca de personas, con una red de 22 sucursales y atención digital permanente.</p>
+        </div>
+        <div class="columna-datos">
+          <dl>
+            <dt>Clientes</dt><dd>40.000</dd>
+            <dt>Sucursales</dt><dd>22</dd>
+            <dt>Fundación</dt><dd>1974</dd>
+            <dt>Supervisión</dt><dd>CMF</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section id="contacto" class="seccion">
+      <div class="contenedor columnas">
+        <div>
+          <h2>Contacto</h2>
+          <p>Casa matriz: Av. Apoquindo 3450, piso 12. Mesa central: 2 2345 6789. Correo: contacto@bancointernacional.cl.</p>
+          <p>La entidad está supervisada por la Comisión para el Mercado Financiero y adherida al Código de Buenas Prácticas Bancarias.</p>
+        </div>
+        <div class="columna-datos">
+          <dl>
+            <dt>Dirección</dt><dd>Av. Apoquindo 3450</dd>
+            <dt>Mesa central</dt><dd>2 2345 6789</dd>
+            <dt>Correo</dt><dd>contacto@<wbr>bancointernacional.cl</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor">
+      <p>Banco Internacional &middot; Av. Apoquindo 3450 &middot; 2 2345 6789</p>
+    </div>
+  </footer>
+
+  <script>
+    // Entrada de cada sección al entrar en pantalla.
+    const observador = new IntersectionObserver((entradas) => {
+      entradas.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observador.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.seccion, .pie, .portada').forEach((s) => {
+      const elementos = s.querySelectorAll('h1, h2, h3, p, article, dl, .cifras, .boton, .columna-datos');
+      elementos.forEach((el, i) => {
+        el.classList.add('observado');
+        el.style.transitionDelay = (i * 70) + 'ms';
+      });
+      observador.observe(s);
+    });
+  </script>
+</body>
+</html>

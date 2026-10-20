@@ -1,0 +1,387 @@
+/*
+  Banco Internacional
+  Dirección: quiet-instrument (sobriedad, columna estrecha, espacio).
+  Un fondo claro, una tinta, un oscuro para la sección institucional,
+  un acento azul para la acción. Sin gradientes ni sombras.
+*/
+
+:root {
+  --fondo: #f4f4f2;
+  --superficie: #ffffff;
+  --tinta: #141412;
+  --tinta-suave: #4a4a45;
+  --oscuro: #101a2e;
+  --oscuro-tinta: #e6e8ec;
+  --acento: #1b3a75;
+  --acento-claro: #dbe2ef;
+  --borde: #dcdbd6;
+
+  --texto: 17px;
+  --pequeno: 14px;
+  --titular: clamp(2.5rem, 6.5vw, 5rem);
+  --seccion: clamp(1.5rem, 2.4vw, 2rem);
+
+  --ancho: 1080px;
+  --lectura: 56ch;
+  --franja: clamp(72px, 10vw, 140px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scrollbar-gutter: stable both-edges; }
+
+body {
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: var(--texto);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.contenedor {
+  width: 100%;
+  max-width: var(--ancho);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 48px);
+}
+
+.contenedor > * { min-width: 0; }
+
+a { color: var(--acento); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1 {
+  font-size: var(--titular);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: var(--seccion);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; }
+
+p { max-width: var(--lectura); }
+
+.entradilla {
+  color: var(--tinta-suave);
+  font-size: 1.05rem;
+  margin-top: 20px;
+}
+
+/* Cabecera */
+
+.cabecera {
+  padding: 22px 0;
+  background: var(--fondo);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.cabecera .contenedor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.marca {
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--tinta);
+}
+
+.navegacion {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  font-size: var(--pequeno);
+}
+
+.navegacion a { color: var(--tinta-suave); }
+.navegacion a:hover { color: var(--tinta); }
+
+.accion {
+  background: var(--acento);
+  color: #fff !important;
+  padding: 9px 18px;
+  border-radius: 2px;
+}
+
+.accion:hover { text-decoration: none; }
+
+.usuario { color: var(--tinta-suave); }
+
+/* Portada */
+
+.portada {
+  padding: clamp(56px, 7vw, 96px) 0 clamp(48px, 6vw, 80px);
+}
+
+.portada .contenedor { max-width: 860px; }
+.portada h1 { max-width: 16ch; }
+
+.cifras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(32px, 6vw, 72px);
+  margin-top: clamp(40px, 6vw, 64px);
+  padding-top: 28px;
+}
+
+.cifras div { min-width: 120px; }
+
+.cifras .valor {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cifras .rotulo {
+  display: block;
+  font-size: var(--pequeno);
+  color: var(--tinta-suave);
+  margin-top: 2px;
+}
+
+.boton {
+  display: inline-block;
+  background: var(--acento);
+  color: #fff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 2px;
+  font-size: var(--pequeno);
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 32px;
+}
+
+.boton:hover { background: #17305f; }
+
+/* Secciones */
+
+.seccion { padding: var(--franja) 0; }
+
+.campo-oscuro {
+  background: var(--oscuro);
+  color: var(--oscuro-tinta);
+}
+
+.campo-oscuro p { color: var(--oscuro-tinta); }
+.campo-oscuro p + p { margin-top: 18px; }
+
+.rejilla-servicios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(28px, 5vw, 64px);
+}
+
+.rejilla-servicios p { color: var(--tinta-suave); font-size: var(--pequeno); }
+
+/* Secciones a dos columnas */
+
+.columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: clamp(32px, 6vw, 96px);
+  align-items: start;
+}
+
+.columna-datos dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 24px;
+  font-size: var(--pequeno);
+}
+
+.columna-datos dt { color: var(--tinta-suave); }
+.columna-datos dd { color: var(--tinta); font-weight: 600; }
+.campo-oscuro .columna-datos dt { color: #b9c0cf; }
+.campo-oscuro .columna-datos dd { color: var(--oscuro-tinta); }
+
+@media (max-width: 720px) {
+  .columnas { grid-template-columns: 1fr; }
+}
+
+/* Panel */
+
+.panel { padding: clamp(40px, 6vw, 72px) 0 var(--franja); }
+
+.panel h1 { margin-bottom: 40px; }
+
+.panel section { margin-bottom: clamp(48px, 6vw, 80px); }
+
+.panel h3 { margin: 32px 0 16px; }
+
+.tarjeta-saldo {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  padding: 32px;
+  max-width: 420px;
+}
+
+.etiqueta {
+  font-size: var(--pequeno);
+  color: var(--tinta-suave);
+}
+
+.cifra {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 4px 0 6px;
+}
+
+.detalle { font-size: var(--pequeno); color: var(--tinta-suave); }
+
+/* Formularios */
+
+.formulario { display: flex; flex-direction: column; max-width: 380px; }
+
+.formulario label {
+  font-size: var(--pequeno);
+  color: var(--tinta-suave);
+  margin: 18px 0 6px;
+}
+
+input, select {
+  font-family: inherit;
+  font-size: var(--texto);
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 2px;
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+input:focus, select:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
+
+.formulario .boton { margin-top: 22px; align-self: flex-start; }
+
+.formulario-linea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.formulario-linea input, .formulario-linea select { flex: 1 1 150px; }
+.formulario-linea .boton { margin-top: 0; }
+
+.mensaje {
+  margin-top: 14px;
+  font-size: var(--pequeno);
+  color: var(--acento);
+}
+
+/* Acceso */
+
+.pagina-acceso .acceso {
+  max-width: var(--ancho);
+  margin: 0 auto;
+  padding: clamp(64px, 10vw, 120px) clamp(20px, 5vw, 48px);
+}
+
+.pagina-acceso h1 { font-size: clamp(2.25rem, 4vw, 3.25rem); margin-bottom: 8px; }
+
+/* Tablas */
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: var(--pequeno);
+  background: var(--superficie);
+}
+
+.tabla th, .tabla td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.tabla th {
+  font-weight: 600;
+  color: var(--tinta-suave);
+  background: var(--fondo);
+}
+
+.accion-secundaria {
+  background: none;
+  border: 1px solid var(--borde);
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: var(--pequeno);
+  color: var(--tinta-suave);
+  cursor: pointer;
+}
+
+.accion-secundaria:hover { color: var(--tinta); border-color: var(--tinta-suave); }
+
+/* Pie */
+
+.pie {
+  padding: 40px 0;
+  font-size: var(--pequeno);
+  color: var(--tinta-suave);
+}
+
+@media (max-width: 640px) {
+  .navegacion { gap: 16px; }
+  .portada h1 { max-width: none; }
+  .tabla { font-size: 13px; }
+  .tabla th, .tabla td { padding: 9px 8px; }
+}
+
+/* Movimiento: entradas escalonadas y feedback en controles.
+   Solo transform y opacity, con respaldo para quien lo tenga desactivado. */
+
+@keyframes entrar {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.portada h1,
+.portada .entradilla,
+.portada .boton {
+  animation: entrar 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.portada .entradilla { animation-delay: 90ms; }
+.portada .boton      { animation-delay: 180ms; }
+
+.observado {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 560ms ease, transform 560ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.observado.visible { opacity: 1; transform: translateY(0); }
+
+.boton, .accion {
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.boton:hover { transform: translateY(-1px); }
+.boton:active { transform: translateY(0); }
+
+.accion-secundaria { transition: border-color 180ms ease, color 180ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .portada h1, .portada .entradilla, .portada .boton { animation: none; }
+  .observado { opacity: 1; transform: none; transition: none; }
+  .boton:hover { transform: none; }
+}

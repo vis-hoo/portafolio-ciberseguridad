@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi cuenta &middot; Banco Internacional</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body class="pagina-panel">
+  <header class="cabecera">
+    <div class="contenedor">
+      <a href="/" class="marca">Banco Internacional</a>
+      <nav class="navegacion">
+        <span id="usuario-actual" class="usuario"></span>
+        <button id="salir" class="accion-secundaria">Salir</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="panel">
+    <div class="contenedor">
+      <h1>Mi cuenta</h1>
+
+      <section class="tarjeta-saldo">
+        <p class="etiqueta">Saldo disponible</p>
+        <p id="saldo" class="cifra">Cargando&hellip;</p>
+        <p id="numero-cuenta" class="detalle"></p>
+      </section>
+
+      <section class="operacion">
+        <h2>Depositar o retirar</h2>
+        <form id="formulario-operacion" class="formulario-linea">
+          <select id="tipo-operacion">
+            <option value="deposito">Depósito</option>
+            <option value="retiro">Retiro</option>
+          </select>
+          <input type="number" id="monto-operacion" step="0.01" min="0.01" placeholder="Monto en dólares" required>
+          <input type="text" id="descripcion-operacion" placeholder="Descripción (opcional)">
+          <button type="submit" class="boton">Ejecutar</button>
+        </form>
+        <p id="aviso-operacion" class="mensaje" hidden></p>
+      </section>
+
+      <section class="prestamos">
+        <h2>Mis créditos</h2>
+        <table class="tabla">
+          <thead>
+            <tr><th>Monto</th><th>Tasa</th><th>Plazo</th><th>Estado</th><th>Condiciones</th></tr>
+          </thead>
+          <tbody id="cuerpo-prestamos"></tbody>
+        </table>
+      </section>
+
+      <section class="movimientos">
+        <h2>Movimientos recientes</h2>
+        <table class="tabla">
+          <thead>
+            <tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Descripción</th></tr>
+          </thead>
+          <tbody id="cuerpo-movimientos"></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const formato = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'USD' });
+    const fecha = (v) => new Date(v).toLocaleDateString('es-CL');
+
+    async function cargarSesion() {
+      const r = await fetch('/api/sesion');
+      if (!r.ok) { window.location.href = '/login'; return; }
+      const s = await r.json();
+      if (s.usuario.rol !== 'cliente') { window.location.href = '/ejecutivo'; return; }
+      document.getElementById('usuario-actual').textContent = s.usuario.username;
+    }
+
+    async function cargarCuenta() {
+      const r = await fetch('/api/cliente/cuenta');
+      const c = await r.json();
+      document.getElementById('saldo').textContent = formato.format(c.SALDO);
+      document.getElementById('numero-cuenta').textContent = 'Cuenta ' + c.NUMERO_CUENTA + ' · ' + c.TIPO;
+    }
+
+    async function cargarPrestamos() {
+      const r = await fetch('/api/cliente/prestamos');
+      const lista = await r.json();
+      document.getElementById('cuerpo-prestamos').innerHTML = lista.map((p) =>
+        '<tr><td>' + formato.format(p.MONTO) + '</td><td>' + p.TASA + '%</td><td>' +
+        p.PLAZO_MESES + ' meses</td><td>' + p.ESTADO + '</td><td>' + (p.CONDICIONES || '') + '</td></tr>'
+      ).join('');
+    }
+
+    async function cargarMovimientos() {
+      const r = await fetch('/api/cliente/movimientos');
+      const lista = await r.json();
+      document.getElementById('cuerpo-movimientos').innerHTML = lista.map((m) =>
+        '<tr><td>' + fecha(m.FECHA) + '</td><td>' + m.TIPO + '</td><td>' +
+        formato.format(m.MONTO) + '</td><td>' + (m.DESCRIPCION || '') + '</td></tr>'
+      ).join('');
+    }
+
+    document.getElementById('formulario-operacion').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const aviso = document.getElementById('aviso-operacion');
+      const resp = await fetch('/api/cliente/operacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: document.getElementById('tipo-operacion').value,
+          monto: document.getElementById('monto-operacion').value,
+          descripcion: document.getElementById('descripcion-operacion').value,
+        }),
+      });
+      const cuerpo = await resp.json();
+      aviso.hidden = false;
+      if (resp.ok) {
+        aviso.textContent = 'Operación realizada. Nuevo saldo: ' + formato.format(cuerpo.saldo);
+        document.getElementById('formulario-operacion').reset();
+        cargarCuenta();
+        cargarMovimientos();
+      } else {
+        aviso.textContent = cuerpo.error || 'No fue posible completar la operación.';
+      }
+    });
+
+    document.getElementById('salir').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+
+    cargarSesion();
+    cargarCuenta();
+    cargarPrestamos();
+    cargarMovimientos();
+  </script>
+</body>
+</html>

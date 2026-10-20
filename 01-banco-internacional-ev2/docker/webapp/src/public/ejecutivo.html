@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel ejecutivo &middot; Banco Internacional</title>
+  <link rel="stylesheet" href="/css/estilo.css">
+</head>
+<body class="pagina-panel">
+  <header class="cabecera">
+    <div class="contenedor">
+      <a href="/" class="marca">Banco Internacional</a>
+      <nav class="navegacion">
+        <span id="usuario-actual" class="usuario"></span>
+        <button id="salir" class="accion-secundaria">Salir</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="panel">
+    <div class="contenedor">
+      <h1>Panel ejecutivo</h1>
+
+      <section>
+        <h2>Clientes</h2>
+        <table class="tabla">
+          <thead>
+            <tr><th>Nombre</th><th>DNI</th><th>Correo</th><th>Cuenta</th><th>Saldo</th><th></th></tr>
+          </thead>
+          <tbody id="cuerpo-clientes"></tbody>
+        </table>
+
+        <h3>Agregar cliente</h3>
+        <form id="formulario-cliente" class="formulario-linea">
+          <input type="text" id="c-nombre" placeholder="Nombre" required>
+          <input type="text" id="c-apellido" placeholder="Apellido" required>
+          <input type="text" id="c-dni" placeholder="DNI" required>
+          <input type="email" id="c-email" placeholder="Correo" required>
+          <input type="date" id="c-fecha" required>
+          <button type="submit" class="boton">Agregar</button>
+        </form>
+        <p id="aviso-cliente" class="mensaje" hidden></p>
+      </section>
+
+      <section>
+        <h2>Créditos</h2>
+        <table class="tabla">
+          <thead>
+            <tr><th>Cliente</th><th>Monto</th><th>Tasa</th><th>Plazo</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody id="cuerpo-prestamos"></tbody>
+        </table>
+
+        <h3>Otorgar crédito</h3>
+        <form id="formulario-prestamo" class="formulario-linea">
+          <input type="number" id="p-cliente" placeholder="ID cliente" required>
+          <input type="number" id="p-monto" step="0.01" placeholder="Monto" required>
+          <input type="number" id="p-tasa" step="0.01" placeholder="Tasa anual %" required>
+          <input type="number" id="p-plazo" placeholder="Plazo en meses" required>
+          <input type="text" id="p-condiciones" placeholder="Condiciones">
+          <button type="submit" class="boton">Otorgar</button>
+        </form>
+        <p id="aviso-prestamo" class="mensaje" hidden></p>
+      </section>
+
+      <section>
+        <h2>Registrar movimiento</h2>
+        <form id="formulario-movimiento" class="formulario-linea">
+          <input type="number" id="m-cuenta" placeholder="ID cuenta" required>
+          <select id="m-tipo">
+            <option value="deposito">Depósito</option>
+            <option value="retiro">Retiro</option>
+          </select>
+          <input type="number" id="m-monto" step="0.01" placeholder="Monto" required>
+          <input type="text" id="m-descripcion" placeholder="Descripción">
+          <button type="submit" class="boton">Registrar</button>
+        </form>
+        <p id="aviso-movimiento" class="mensaje" hidden></p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const formato = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'USD' });
+
+    async function cargarSesion() {
+      const r = await fetch('/api/sesion');
+      if (!r.ok) { window.location.href = '/login'; return; }
+      const s = await r.json();
+      if (s.usuario.rol !== 'ejecutivo') { window.location.href = '/cliente'; return; }
+      document.getElementById('usuario-actual').textContent = s.usuario.username;
+    }
+
+    async function cargarClientes() {
+      const r = await fetch('/api/ejecutivo/clientes');
+      const lista = await r.json();
+      document.getElementById('cuerpo-clientes').innerHTML = lista.map((c) =>
+        '<tr><td>' + c.NOMBRE + ' ' + c.APELLIDO + '</td><td>' + c.DNI + '</td><td>' + c.EMAIL +
+        '</td><td>' + (c.NUMERO_CUENTA || '') + '</td><td>' + (c.SALDO != null ? formato.format(c.SALDO) : '') +
+        '</td><td><button class="accion-secundaria" data-cliente="' + c.ID + '">Eliminar</button></td></tr>'
+      ).join('');
+      document.querySelectorAll('[data-cliente]').forEach((b) =>
+        b.addEventListener('click', () => eliminarCliente(b.dataset.cliente))
+      );
+    }
+
+    async function cargarPrestamos() {
+      const r = await fetch('/api/ejecutivo/prestamos');
+      const lista = await r.json();
+      document.getElementById('cuerpo-prestamos').innerHTML = lista.map((p) =>
+        '<tr><td>' + p.NOMBRE + ' ' + p.APELLIDO + '</td><td>' + formato.format(p.MONTO) +
+        '</td><td>' + p.TASA + '%</td><td>' + p.PLAZO_MESES + ' meses</td><td>' + p.ESTADO +
+        '</td><td><button class="accion-secundaria" data-prestamo="' + p.ID + '">Eliminar</button></td></tr>'
+      ).join('');
+      document.querySelectorAll('[data-prestamo]').forEach((b) =>
+        b.addEventListener('click', () => eliminarPrestamo(b.dataset.prestamo))
+      );
+    }
+
+    async function eliminarCliente(id) {
+      if (!confirm('¿Eliminar al cliente ' + id + '?')) return;
+      await fetch('/api/ejecutivo/clientes/' + id, { method: 'DELETE' });
+      cargarClientes();
+    }
+
+    async function eliminarPrestamo(id) {
+      if (!confirm('¿Eliminar el crédito ' + id + '?')) return;
+      await fetch('/api/ejecutivo/prestamos/' + id, { method: 'DELETE' });
+      cargarPrestamos();
+    }
+
+    document.getElementById('formulario-cliente').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const aviso = document.getElementById('aviso-cliente');
+      const resp = await fetch('/api/ejecutivo/clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: document.getElementById('c-nombre').value,
+          apellido: document.getElementById('c-apellido').value,
+          dni: document.getElementById('c-dni').value,
+          email: document.getElementById('c-email').value,
+          fecha_nacimiento: document.getElementById('c-fecha').value,
+        }),
+      });
+      const cuerpo = await resp.json();
+      aviso.hidden = false;
+      aviso.textContent = resp.ok ? 'Cliente agregado con ID ' + cuerpo.id : (cuerpo.error || 'Error');
+      if (resp.ok) { e.target.reset(); cargarClientes(); }
+    });
+
+    document.getElementById('formulario-prestamo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const aviso = document.getElementById('aviso-prestamo');
+      const resp = await fetch('/api/ejecutivo/prestamos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_cliente: document.getElementById('p-cliente').value,
+          monto: document.getElementById('p-monto').value,
+          tasa: document.getElementById('p-tasa').value,
+          plazo_meses: document.getElementById('p-plazo').value,
+          condiciones: document.getElementById('p-condiciones').value,
+        }),
+      });
+      const cuerpo = await resp.json();
+      aviso.hidden = false;
+      aviso.textContent = resp.ok ? 'Crédito otorgado.' : (cuerpo.error || 'Error');
+      if (resp.ok) { e.target.reset(); cargarPrestamos(); }
+    });
+
+    document.getElementById('formulario-movimiento').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const aviso = document.getElementById('aviso-movimiento');
+      const resp = await fetch('/api/ejecutivo/movimientos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_cuenta: document.getElementById('m-cuenta').value,
+          tipo: document.getElementById('m-tipo').value,
+          monto: document.getElementById('m-monto').value,
+          descripcion: document.getElementById('m-descripcion').value,
+        }),
+      });
+      const cuerpo = await resp.json();
+      aviso.hidden = false;
+      aviso.textContent = resp.ok ? 'Movimiento registrado.' : (cuerpo.error || 'Error');
+      if (resp.ok) e.target.reset();
+    });
+
+    document.getElementById('salir').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+
+    cargarSesion();
+    cargarClientes();
+    cargarPrestamos();
+  </script>
+</body>
+</html>
