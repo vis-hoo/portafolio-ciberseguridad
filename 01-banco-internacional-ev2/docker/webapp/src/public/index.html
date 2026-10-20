@@ -97,24 +97,31 @@
   </footer>
 
   <script>
-    // Entrada de cada sección al entrar en pantalla.
-    const observador = new IntersectionObserver((entradas) => {
-      entradas.forEach((e) => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          observador.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.2 });
+    // Sin JS, los bloques se ven directamente; con JS entran al hacer scroll.
+    if ('IntersectionObserver' in window) {
+      const observador = new IntersectionObserver((entradas) => {
+        entradas.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            observador.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.15 });
 
-    document.querySelectorAll('.seccion, .pie, .portada').forEach((s) => {
-      const elementos = s.querySelectorAll('h1, h2, h3, p, article, dl, .cifras, .boton, .columna-datos');
-      elementos.forEach((el, i) => {
-        el.classList.add('observado');
-        el.style.transitionDelay = (i * 70) + 'ms';
+      document.querySelectorAll('.seccion, .pie, .portada').forEach((s) => {
+        const elementos = s.querySelectorAll('h1, h2, h3, p, article, dl, .cifras, .boton, .columna-datos');
+        elementos.forEach((el, i) => {
+          el.classList.add('observado');
+          el.style.transitionDelay = (i * 70) + 'ms';
+          observador.observe(el);
+        });
       });
-      observador.observe(s);
-    });
+
+      // Salvaguarda: si algo falla, el contenido se muestra de todos modos.
+      window.addEventListener('error', () => {
+        document.querySelectorAll('.observado').forEach((el) => el.classList.add('visible'));
+      });
+    }
   </script>
 </body>
 </html>
