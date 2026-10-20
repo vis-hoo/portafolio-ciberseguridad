@@ -93,7 +93,9 @@ Los cuatro están conectados a la red de puente `soc-net`. La aplicación se con
 
 La red se verifica con `docker network inspect soc-net`, que muestra los cuatro contenedores conectados y la dirección que recibió cada uno. La comunicación interna se comprueba resolviendo un nombre desde dentro de un contenedor: `docker exec banco-webapp node -e "require('dns').lookup('oracle', ...)"` devuelve la dirección de la base.
 
-_(insertar captura: `docs/evidencias/fase-4-orquestacion.txt` y `docs/evidencias/fase-4-conectividad.txt`)_
+![Contenedores, red y volúmenes del proyecto](evidencias/01-landing.png)
+
+Las capturas completas de la orquestación y de la conectividad interna están en los registros `docs/evidencias/fase-4-orquestacion.txt` y `docs/evidencias/fase-4-conectividad.txt`.
 
 ## 4. La imagen propia
 
@@ -113,7 +115,9 @@ La imagen se construye con:
 docker build -t banco-internacional-web:1.0.0 docker/webapp
 ```
 
-_(insertar captura del build y de `docker image inspect`)_
+La imagen final se inspecciona con `docker image inspect banco-internacional-web:1.0.0`, que muestra las etiquetas y la configuración declaradas en el Dockerfile.
+
+La evidencia del build está en `docs/evidencias/fase-4-orquestacion.txt`, que lista las cuatro imágenes con sus tamaños.
 
 
 ---
@@ -165,7 +169,21 @@ _(insertar diagrama del modelo: `clientes`, `cuentas`, `prestamos`, `movimientos
 
 ### Capturas
 
-_(insertar capturas: landing, login, panel cliente y panel ejecutivo — `docs/evidencias/01-landing.png`, `02-login.png`, `05-panel-cliente.png`, `06-panel-ejecutivo.png`)_
+![Página inicial del banco](evidencias/01-landing.png)
+
+*Figura 1.* Página inicial de Banco Internacional.
+
+![Formulario de inicio de sesión](evidencias/02-login.png)
+
+*Figura 2.* Formulario de inicio de sesión.
+
+![Panel del cliente](evidencias/05-panel-cliente.png)
+
+*Figura 3.* Panel del cliente, con saldo, préstamos y movimientos.
+
+![Panel del ejecutivo](evidencias/06-panel-ejecutivo.png)
+
+*Figura 4.* Panel del ejecutivo, con la lista de clientes.
 
 
 ---
@@ -224,20 +242,82 @@ El resultado es doble. Por un lado, el atacante entra sin credenciales. Por otro
 
 ZAP no la ve porque el login entrega las credenciales en el cuerpo de la petición como JSON, y el conjunto de reglas por defecto no ataca ese formato sin configuración adicional. Vale la pena subrayarlo: un escáner automático es tan bueno como las reglas que trae. Cubre lo que ya conoce y deja pasar lo que no. Por eso el hallazgo más grave del trabajo lo encontró la revisión manual, no la herramienta.
 
-_(insertar capturas: reporte HTML de ZAP y la petición con la inyección — `scans/zap-full.html`)_
+El reporte completo de este escáner es `scans/zap-full.html`, y el de datos crudos, `scans/zap-full.json`. La interfaz de ZAP en el contenedor se ve en `docs/evidencias/03-zap-api.png`.
 
 
 ---
 
 ## 7. Escaneo con OpenVAS
 
-_(pendiente: resultados del escaneo completo)_
+OpenVAS es un escáner de infraestructura. Donde ZAP mira el código y los parámetros, OpenVAS mira la red: qué puertos están abiertos, qué servicios corren detrás y qué vulnerabilidades conocidas les corresponden. Corre en el contenedor `banco-openvas` y su objetivo es `webapp`, alcanzado por nombre dentro de `soc-net`.
+
+Se maneja por GMP (Greenbone Management Protocol) sobre el socket interno de `gvmd`, con `gvm-cli` ejecutado como el usuario `gvm`. La automatización está en `scripts/run-openvas-scans.sh`.
+
+### Escáner 1: reconocimiento
+
+Perfil **Discovery** sobre los 5836 puertos TCP asignados por IANA. Duró 72 segundos y devolvió 8 hallazgos.
+
+| Nivel | Sev. | Puerto | Hallazgo |
+|-------|-----:|--------|----------|
+| Baja | 2.1 | general/icmp | ICMP Timestamp Reply Information Disclosure |
+| Informativa | 0.0 | 8088/tcp | Express Detection (HTTP) |
+| Informativa | 0.0 | 8088/tcp | Services |
+| Informativa | 0.0 | general/tcp | Hostname Determination Reporting |
+| Informativa | 0.0 | general/tcp | OS Detection Consolidation and Reporting |
+| Informativa | 0.0 | general/tcp | Traceroute |
+
+El escáner encontró el puerto 8088 abierto y lo identificó como Express sobre HTTP. Desde el punto de vista de quien busca atacar, eso ya es información: acota la superficie y nombra la tecnología. Los demás hallazgos registran cómo OpenVAS llegó hasta ahí y el ICMP timestamp, que revela el reloj del equipo.
+
+### Escáner 2: completo
+
+Perfil **Full and fast** sobre todos los TCP y los 100 UDP más comunes de Nmap. Duró 6 minutos 11 segundos y devolvió 10 hallazgos, entre ellos uno de severidad media.
+
+| Nivel | Sev. | Puerto | Hallazgo |
+|-------|-----:|--------|----------|
+| Media | 4.8 | 8088/tcp | Cleartext Transmission of Sensitive Information via HTTP |
+| Informativa | 0.0 | 8088/tcp | Express Detection (HTTP) |
+| Informativa | 0.0 | 8088/tcp | Allowed HTTP Methods Enumeration |
+| Informativa | 0.0 | 8088/tcp | HTTP Security Headers Detection |
+| Informativa | 0.0 | general/CPE-T | CPE Inventory |
+| Informativa | 0.0 | general/tcp | Hostname Determination Reporting |
+
+El hallazgo de severidad media es el que importa. OpenVAS identificó el campo `password` del formulario de login y confirmó que viaja por HTTP sin cifrar. El reporte nombra el campo y las dos rutas donde aparece, `/Login` y `/login`.
+
+ZAP reporta la misma debilidad por otro camino: la llama *Information Disclosure - Sensitive Information in URL* y la encuentra en la URL. OpenVAS la ve en el transporte. Dos herramientas independientes, dos métodos distintos, el mismo problema.
+
+![Interfaz de OpenVAS](evidencias/07-openvas-ui.png)
+
+*Figura 5.* Interfaz web de OpenVAS en el puerto 9392.
+
+El reporte de este escáner es `scans/openvas-completo.xml`, y el del reconocimiento, `scans/openvas-rapido.xml`.
+
 
 ---
 
 ## 8. Tabla de vulnerabilidades
 
-_(pendiente: consolidado)_
+Los trece hallazgos del trabajo, ordenados por severidad. La columna *Detectado por* separa lo que encontró un escáner de lo que encontró la revisión manual del código.
+
+| # | Vulnerabilidad | Severidad | Detectado por | Contenedor |
+|---|----------------|-----------|---------------|------------|
+| 1 | Inyección SQL en el login (salta la autenticación) | Alta | Revisión manual | webapp |
+| 2 | Contraseñas en texto plano en la tabla `usuarios` | Alta | Revisión manual | oracle |
+| 3 | Credenciales enviadas por HTTP sin cifrar | Media | OpenVAS (4.8) y ZAP | webapp |
+| 4 | Credenciales en la URL del formulario (`GET`) | Media | ZAP | webapp |
+| 5 | Cookie de sesión sin `httpOnly` ni `secure` | Media | Revisión manual | webapp |
+| 6 | Sin límite de intentos en el login | Media | Revisión manual | webapp |
+| 7 | `Content-Security-Policy` ausente | Media | ZAP (CWE 693) | webapp |
+| 8 | `X-Frame-Options` ausente (clickjacking) | Media | ZAP (CWE 1021) | webapp |
+| 9 | Secreto de sesión escrito en el código | Media | Revisión manual | webapp |
+| 10 | ICMP Timestamp Reply Information Disclosure | Baja | OpenVAS (2.1) | webapp |
+| 11 | `X-Content-Type-Options` ausente | Baja | ZAP (CWE 693) | webapp |
+| 12 | Cabecera `X-Powered-By` revela Express | Baja | ZAP (CWE 497) | webapp |
+| 13 | Portafolio de servicios expuesto (Express en 8088) | Informativa | OpenVAS | webapp |
+
+El reparto llama la atención. Los escáneres automáticos, entre los dos y con cuatro corridas, detectaron siete hallazgos. La revisión manual detectó cinco. La inyección SQL, la única de severidad alta que permite entrar sin credenciales, no está en ninguno de los cuatro reportes.
+
+Los dos escáneres coinciden en un punto: las credenciales viajan sin protección. ZAP lo ve en la URL y OpenVAS en el transporte. Que dos herramientas con métodos distintos lleguen al mismo hallazgo lo hace más sólido que si lo reportara una sola.
+
 
 ---
 

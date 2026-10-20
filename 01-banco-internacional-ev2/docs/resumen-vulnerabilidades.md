@@ -70,8 +70,42 @@ El escáner reconoce el servicio: encuentra el puerto 8088 abierto y lo identifi
 
 ### Escáner 2: completo (`openvas-completo.xml`)
 
-_(se completa cuando termina el escaneo completo)_
+Perfil **Full and fast** sobre todos los TCP y los 100 UDP más comunes de Nmap. Duró 6 minutos 11 segundos y devolvió 10 hallazgos. Aquí sí aparece lo que el reconocimiento solo insinuaba.
+
+| Nivel | Sev. | Puerto | Hallazgo |
+|-------|-----:|--------|----------|
+| Media | 4.8 | 8088/tcp | Cleartext Transmission of Sensitive Information via HTTP |
+| Informativa | 0.0 | 8088/tcp | Express Detection (HTTP) |
+| Informativa | 0.0 | 8088/tcp | Allowed HTTP Methods Enumeration |
+| Informativa | 0.0 | 8088/tcp | HTTP Security Headers Detection |
+| Informativa | 0.0 | general/CPE-T | CPE Inventory |
+| Informativa | 0.0 | general/tcp | Hostname Determination Reporting |
+
+El hallazgo de severidad media es el que importa: OpenVAS identificó el campo `password` del formulario de login y confirmó que viaja por HTTP sin cifrar. Cita las dos rutas del formulario, `/Login` y `/login`, y señala el campo por nombre. Es la misma debilidad que ZAP reporta como *Sensitive Information in URL*, vista desde el otro lado: ZAP la ve en la URL, OpenVAS la ve en el transporte.
+
+Los demás hallazgos confirman el reconocimiento. OpenVAS enumera los métodos HTTP que acepta el servidor y detecta las cabeceras de seguridad que faltan, que coincide con lo que ZAP reporta por su cuenta. Que dos herramientas independientes lleguen al mismo punto refuerza el hallazgo.
 
 ## Tabla consolidada
 
-_(se completa al cerrar las dos secciones anteriores)_
+Los hallazgos de las dos herramientas, ordenados por severidad. La columna *Detectado por* distingue lo que encontró un escáner de lo que encontró la revisión manual.
+
+| # | Vulnerabilidad | Severidad | Detectado por | Contenedor |
+|---|----------------|-----------|---------------|------------|
+| 1 | Inyección SQL en el login (salta autenticación) | Alta | Revisión manual | webapp |
+| 2 | Contraseñas en texto plano en la tabla `usuarios` | Alta | Revisión manual | oracle |
+| 3 | Credenciales enviadas por HTTP sin cifrar | Media | OpenVAS (4.8) y ZAP | webapp |
+| 4 | Credenciales en la URL del formulario (`GET`) | Media | ZAP | webapp |
+| 5 | Cookie de sesión sin `httpOnly` ni `secure` | Media | Revisión manual | webapp |
+| 6 | Sin límite de intentos en el login | Media | Revisión manual | webapp |
+| 7 | `Content-Security-Policy` ausente | Media | ZAP (CWE 693) | webapp |
+| 8 | `X-Frame-Options` ausente (clickjacking) | Media | ZAP (CWE 1021) | webapp |
+| 9 | Secreto de sesión escrito en el código | Media | Revisión manual | webapp |
+| 10 | ICMP Timestamp Reply Information Disclosure | Baja | OpenVAS (2.1) | webapp |
+| 11 | `X-Content-Type-Options` ausente | Baja | ZAP (CWE 693) | webapp |
+| 12 | Cabecera `X-Powered-By` revela Express | Baja | ZAP (CWE 497) | webapp |
+| 13 | Portafolio de servicios expuesto (Express en 8088) | Informativa | OpenVAS | webapp |
+
+Trece hallazgos en total. Los escáneres automáticos detectaron siete; la revisión manual, cinco. La inyección SQL, que es la más grave, no aparece en ningún reporte de escáner.
+
+La tabla muestra además la ventaja de usar dos herramientas. ZAP mira la capa web y encuentra las cabeceras y la URL. OpenVAS mira el transporte y el servicio, y encuentra el HTTP sin cifrar. Las dos coinciden en dos puntos, y esa coincidencia vale más que cualquiera de los dos por separado.
+
