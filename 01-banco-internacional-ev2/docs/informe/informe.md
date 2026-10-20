@@ -314,7 +314,7 @@ Los trece hallazgos del trabajo, ordenados por severidad. La columna *Detectado 
 | 12 | Cabecera `X-Powered-By` revela Express | Baja | ZAP (CWE 497) | webapp |
 | 13 | Portafolio de servicios expuesto (Express en 8088) | Informativa | OpenVAS | webapp |
 
-El reparto llama la atención. Los escáneres automáticos, entre los dos y con cuatro corridas, detectaron siete hallazgos. La revisión manual detectó cinco. La inyección SQL, la única de severidad alta que permite entrar sin credenciales, no está en ninguno de los cuatro reportes.
+El reparto llama la atención. Los escáneres automáticos, entre los dos y con cuatro corridas, detectaron ocho hallazgos: cinco solo ZAP, dos solo OpenVAS y uno los dos. La revisión manual del código aportó los cinco restantes. La inyección SQL, la única de severidad alta que permite entrar sin credenciales, no está en ninguno de los cuatro reportes.
 
 Los dos escáneres coinciden en un punto: las credenciales viajan sin protección. ZAP lo ve en la URL y OpenVAS en el transporte. Que dos herramientas con métodos distintos lleguen al mismo hallazgo lo hace más sólido que si lo reportara una sola.
 

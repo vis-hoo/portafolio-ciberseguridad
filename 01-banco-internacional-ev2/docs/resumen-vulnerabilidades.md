@@ -105,7 +105,7 @@ Los hallazgos de las dos herramientas, ordenados por severidad. La columna *Dete
 | 12 | Cabecera `X-Powered-By` revela Express | Baja | ZAP (CWE 497) | webapp |
 | 13 | Portafolio de servicios expuesto (Express en 8088) | Informativa | OpenVAS | webapp |
 
-Trece hallazgos en total. Los escáneres automáticos detectaron siete; la revisión manual, cinco. La inyección SQL, que es la más grave, no aparece en ningún reporte de escáner.
+Trece hallazgos en total. Los escáneres automáticos, entre los dos y con cuatro corridas, detectaron ocho: cinco solo ZAP, dos solo OpenVAS y uno los dos. La revisión manual del código aportó los cinco restantes. La inyección SQL, que es la más grave, no aparece en ningún reporte de escáner.
 
 La tabla muestra además la ventaja de usar dos herramientas. ZAP mira la capa web y encuentra las cabeceras y la URL. OpenVAS mira el transporte y el servicio, y encuentra el HTTP sin cifrar. Las dos coinciden en dos puntos, y esa coincidencia vale más que cualquiera de los dos por separado.
 
