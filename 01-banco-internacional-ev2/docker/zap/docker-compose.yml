@@ -13,8 +13,6 @@ services:
       -config api.disablekey=true
     ports:
       - "8080:8080"
-    volumes:
-      - ./reportes:/zap/wrk:rw
     networks:
       - soc-net
 
