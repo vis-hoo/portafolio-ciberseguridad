@@ -1,0 +1,29 @@
+services:
+  oracle:
+    image: gvenzl/oracle-free:23-slim
+    container_name: banco-oracle
+    restart: unless-stopped
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-Banco2026}
+      APP_USER: banco
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD:-banco2026}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./init:/container-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+    networks:
+      - soc-net
+
+volumes:
+  oracle-data:
+
+networks:
+  soc-net:
+    name: soc-net
