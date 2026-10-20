@@ -8,7 +8,7 @@ La evaluación pide tres cosas: que los contenedores se comuniquen entre sí, un
 
 ## Arquitectura
 
-Tres de los cuatro contenedores son la infraestructura y el cuarto es una herramienta de escaneo por cada tipo de análisis.
+Dos contenedores sostienen la infraestructura: la base de datos y la aplicación. Los otros dos son las herramientas de escaneo, una por cada tipo de análisis.
 
 | Contenedor | Puerto | Rol |
 |------------|--------|-----|
