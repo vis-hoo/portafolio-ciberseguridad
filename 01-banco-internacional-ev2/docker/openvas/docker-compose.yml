@@ -4,9 +4,16 @@ services:
     container_name: banco-openvas
     restart: unless-stopped
     environment:
-      # Actualiza el feed de vulnerabilidades al iniciar. La primera
-      # vez tarda bastante; en arranques posteriores el volumen lo evita.
-      SKIP_UPDATE: "false"
+      # La imagen ya trae un feed de vulnerabilidades reciente. Con
+      # SKIPSYNC en true se usa ese feed y el contenedor queda listo
+      # en pocos minutos. Con SKIPSYNC en false se sincroniza el feed
+      # completo desde Greenbone, que en la primera ejecucion tarda
+      # entre una y dos horas.
+      #
+      # Para el laboratorio se usa el feed de la imagen. Si se quiere
+      # actualizar, basta con poner SKIPSYNC en false y dejar que
+      # termine la sincronizacion.
+      SKIPSYNC: "true"
       # Sin HTTPS: el laboratorio no expone la interfaz fuera de la red.
       HTTPS: "false"
     ports:

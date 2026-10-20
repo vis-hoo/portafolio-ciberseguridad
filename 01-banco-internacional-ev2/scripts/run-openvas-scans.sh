@@ -28,6 +28,12 @@ CLAVE="admin"
 OBJETIVO_WEB="webapp"
 OBJETIVO_DB="oracle"
 
+# Listas de puertos predefinidas que trae Greenbone.
+#   TCP IANA     -> los 5836 puertos TCP asignados por IANA.
+#   TCP+UDP top  -> todos los TCP y los 100 UDP mas comunes de Nmap.
+PUERTOS_RAPIDO="33d0cd82-57c6-11e1-8ed1-406186ea4fc5"
+PUERTOS_COMPLETO="730ef368-57e2-11e1-a90f-406186ea4fc5"
+
 modo="${1:-ambos}"
 
 mkdir -p "$SALIDA"
@@ -35,18 +41,26 @@ mkdir -p "$SALIDA"
 # Envia una orden GMP y devuelve la respuesta XML.
 gmp() {
   docker exec -u gvm "$CONTENEDOR" gvm-cli \
-    --socketpath "$SOCKET" --protocol GMP \
+    --protocol GMP \
     --gmp-username "$USUARIO" --gmp-password "$CLAVE" \
-    socket --xml "$1" 2>/dev/null
+    socket --socketpath "$SOCKET" --xml "$1" 2>/dev/null
 }
 
-# Extrae el primer valor de una etiqueta del XML.
+# Extrae un valor del XML, ya sea que venga como elemento
+# (<id>abc</id>) o como atributo (<respuesta id="abc"/>).
+# GMP usa las dos formas: las respuestas entregan el id como
+# atributo, y los elementos internos lo entregan como etiqueta.
 extraer() {
   python3 -c '
 import sys, re
 texto = sys.stdin.read()
-etiqueta = sys.argv[1]
-m = re.search(r"<%s>([^<]*)</%s>" % (etiqueta, etiqueta), texto)
+clave = sys.argv[1]
+# Primero como atributo:  clave="valor"
+m = re.search(r"\b%s=\"([^\"]+)\"" % re.escape(clave), texto)
+if m:
+    print(m.group(1)); sys.exit()
+# Luego como elemento:  <clave>valor</clave>
+m = re.search(r"<%s>([^<]*)</%s>" % (clave, clave), texto)
 print(m.group(1) if m else "")
 ' "$1"
 }
@@ -79,7 +93,7 @@ comprobar_openvas() {
 
 # Crea un objetivo de escaneo y devuelve su UUID.
 crear_objetivo() {
-  local nombre="$1" host="$2"
+  local nombre="$1" host="$2" puertos="$3"
   local existente
   existente="$(gmp "<get_targets/>" | python3 -c '
 import sys, re
@@ -95,35 +109,41 @@ for bloque in re.findall(r"<target id=\"([^\"]+)\">(.*?)</target>", texto, re.S)
     return
   fi
 
-  gmp "<create_target><name>$nombre</name><hosts>$host</hosts></create_target>" | extraer id
+  gmp "<create_target><name>$nombre</name><hosts>$host</hosts><port_list id=\"$puertos\"/></create_target>" | extraer id
 }
 
 # Lanza una tarea de escaneo y espera a que termine.
-# Devuelve el UUID del reporte.
+# Deja el UUID del reporte en la variable global REPORTE_ID.
+# El avance se imprime por stderr para que el llamador pueda
+# capturar solo el identificador si lo necesita.
 lanzar_y_esperar() {
-  local nombre="$1" host="$2" perfil="$3" etiqueta="$4"
+  local nombre="$1" host="$2" perfil="$3" puertos="$4" limite="${5:-10800}"
 
   local objetivo perfil_id
-  objetivo="$(crear_objetivo "$nombre" "$host")"
+  objetivo="$(crear_objetivo "$nombre" "$host" "$puertos")"
   perfil_id="$(uuid_perfil "$perfil")"
 
   if [ -z "$perfil_id" ]; then
-    echo "ERROR: no se encontro el perfil '$perfil'."; exit 1
+    echo "ERROR: no se encontro el perfil '$perfil'." >&2; exit 1
   fi
 
-  echo "  Objetivo: $nombre ($host)"
-  echo "  Perfil:   $perfil"
+  echo "  Objetivo: $nombre ($host)" >&2
+  echo "  Perfil:   $perfil" >&2
 
   local tarea
   tarea="$(gmp "<create_task><name>$nombre</name><target id=\"$objetivo\"/><config id=\"$perfil_id\"/></create_task>" | extraer id)"
 
-  echo "  Tarea creada: $tarea"
-  echo "  Lanzando escaneo..."
+  if [ -z "$tarea" ]; then
+    echo "ERROR: no se pudo crear la tarea de escaneo." >&2; exit 1
+  fi
+
+  echo "  Tarea creada: $tarea" >&2
+  echo "  Lanzando escaneo..." >&2
   local reporte
   reporte="$(gmp "<start_task task_id=\"$tarea\"/>" | extraer report_id)"
 
   # Espera: el escaneo completo puede tardar bastante.
-  local inicio=$SECONDS limite="${5:-10800}"
+  local inicio=$SECONDS
   while true; do
     local estado
     estado="$(gmp "<get_tasks task_id=\"$tarea\"/>" | python3 -c '
@@ -132,19 +152,19 @@ t = sys.stdin.read()
 m = re.search(r"<status>([^<]*)</status>", t)
 print(m.group(1) if m else "?")
 ')"
-    echo "  Estado: $estado (${SECONDS}s)"
+    echo "  Estado: $estado (${SECONDS}s)" >&2
     case "$estado" in
       Done) break ;;
-      Stopped|Interrupted|*Error*) echo "  El escaneo termino con estado $estado"; break ;;
+      Stopped|Interrupted|*Error*) echo "  El escaneo termino con estado $estado" >&2; break ;;
     esac
     if [ $((SECONDS - inicio)) -gt "$limite" ]; then
-      echo "  Tiempo agotado; se usa el reporte parcial."
+      echo "  Tiempo agotado; se usa el reporte parcial." >&2
       break
     fi
     sleep 30
   done
 
-  echo "$reporte"
+  REPORTE_ID="$reporte"
 }
 
 esperar_reporte() {
@@ -162,18 +182,20 @@ esac
 if [ "$modo" = "rapido" ] || [ "$modo" = "ambos" ]; then
   echo
   echo "=== Escaner 1: rapido (Discovery) ==="
-  r1="$(lanzar_y_esperar "EV2-Rapido-Web" "$OBJETIVO_WEB" "Discovery" "rapido" | tail -1)"
+  lanzar_y_esperar "EV2-Rapido-Web" "$OBJETIVO_WEB" "Discovery" "$PUERTOS_RAPIDO" 1800
   esperar_reporte
-  gmp "<get_reports report_id=\"$r1\" format_id=\"a994b278-1f62-11e1-96ac-406186ea4fc5\"/>" > "$SALIDA/openvas-rapido.xml"
+  # details="1" es obligatorio: sin el, get_reports devuelve solo los
+  # metadatos del reporte y omite el bloque <results> con los hallazgos.
+  gmp "<get_reports report_id=\"$REPORTE_ID\" details=\"1\" format_id=\"a994b278-1f62-11e1-96ac-406186ea4fc5\"/>" > "$SALIDA/openvas-rapido.xml"
   echo "  Reporte 1 escrito: scans/openvas-rapido.xml"
 fi
 
 if [ "$modo" = "completo" ] || [ "$modo" = "ambos" ]; then
   echo
   echo "=== Escaner 2: completo (Full and fast) ==="
-  r2="$(lanzar_y_esperar "EV2-Completo-Web" "$OBJETIVO_WEB" "Full and fast" "completo" | tail -1)"
+  lanzar_y_esperar "EV2-Completo-Web" "$OBJETIVO_WEB" "Full and fast" "$PUERTOS_COMPLETO" 10800
   esperar_reporte
-  gmp "<get_reports report_id=\"$r2\" format_id=\"a994b278-1f62-11e1-96ac-406186ea4fc5\"/>" > "$SALIDA/openvas-completo.xml"
+  gmp "<get_reports report_id=\"$REPORTE_ID\" details=\"1\" format_id=\"a994b278-1f62-11e1-96ac-406186ea4fc5\"/>" > "$SALIDA/openvas-completo.xml"
   echo "  Reporte 2 escrito: scans/openvas-completo.xml"
 fi
 
