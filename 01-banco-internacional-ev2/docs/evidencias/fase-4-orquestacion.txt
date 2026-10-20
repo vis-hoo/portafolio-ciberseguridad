@@ -1,0 +1,35 @@
+EVIDENCIA FASE 4 - Orquestacion completa con Docker Compose
+Fecha: 2026-10-20 18:20:45
+Host: Linux 7.2.11-200.fc44.x86_64 x86_64
+Docker: Docker version 29.9.1, build dfc520d
+Compose: 5.6.0
+
+== 1. Servicios declarados en el compose raiz ==
+openvas
+oracle
+webapp
+zap
+
+== 2. Contenedores en ejecucion ==
+NAMES           IMAGE                           STATUS                        PORTS
+banco-openvas   immauss/openvas:latest          Up About a minute (healthy)   0.0.0.0:9392->9392/tcp, [::]:9392->9392/tcp
+banco-zap       zaproxy/zap-stable:latest       Up About a minute (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+banco-webapp    banco-internacional-web:1.0.0   Up About a minute (healthy)   0.0.0.0:8088->8088/tcp, [::]:8088->8088/tcp
+banco-oracle    gvenzl/oracle-free:23-slim      Up About a minute (healthy)   0.0.0.0:1521->1521/tcp, [::]:1521->1521/tcp
+
+== 3. Red soc-net y direcciones asignadas ==
+banco-oracle    172.18.0.3/16
+banco-openvas   172.18.0.2/16
+banco-webapp    172.18.0.4/16
+banco-zap       172.18.0.5/16
+
+
+== 4. Volumenes ==
+docker_openvas-data
+docker_oracle-data
+
+== 5. Imagenes en uso ==
+banco-internacional-web:1.0.0	261MB
+zaproxy/zap-stable:latest	3.76GB
+immauss/openvas:latest	7.2GB
+gvenzl/oracle-free:23-slim	2.84GB

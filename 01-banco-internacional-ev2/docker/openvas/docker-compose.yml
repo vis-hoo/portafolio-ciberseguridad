@@ -1,0 +1,26 @@
+services:
+  openvas:
+    image: immauss/openvas:latest
+    container_name: banco-openvas
+    restart: unless-stopped
+    environment:
+      # Actualiza el feed de vulnerabilidades al iniciar. La primera
+      # vez tarda bastante; en arranques posteriores el volumen lo evita.
+      SKIP_UPDATE: "false"
+      # Sin HTTPS: el laboratorio no expone la interfaz fuera de la red.
+      HTTPS: "false"
+    ports:
+      - "9392:9392"
+    volumes:
+      # Un solo volumen: la imagen conserva ahi todo el estado de
+      # Greenbone (certificados, base de datos y feed).
+      - openvas-data:/data
+    networks:
+      - soc-net
+
+volumes:
+  openvas-data:
+
+networks:
+  soc-net:
+    name: soc-net

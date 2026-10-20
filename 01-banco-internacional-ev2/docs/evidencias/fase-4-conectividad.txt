@@ -1,0 +1,18 @@
+EVIDENCIA FASE 4 - Comunicacion entre contenedores
+Fecha: 2026-10-20 18:20:55
+
+== 1. Resolucion DNS interna (nombre del servicio -> IP) ==
+webapp resuelve 'oracle': 172.18.0.3
+zap resuelve 'webapp':    172.18.0.4      webapp
+openvas resuelve 'webapp': 172.18.0.4      webapp
+
+== 2. La webapp crea su pool de conexiones contra el hostname 'oracle' ==
+Pool de conexiones a Oracle creado
+Banco Internacional escuchando en el puerto 8088
+
+== 3. Autenticacion real a traves de la red (webapp -> oracle) ==
+login ejecutivo: {"ok":true,"rol":"ejecutivo","username":"ejecutivo"}
+== 4. La webapp no publica su base: Oracle solo es accesible por soc-net ==
+health de la app desde el host: {"ok":true,"servicio":"banco-internacional-web"}
+== 5. API de ZAP accesible ==
+version de ZAP: {"version":"2.17.0"}

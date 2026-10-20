@@ -1,0 +1,17 @@
+# ============================================================
+# Banco Internacional EV-2 - orquestacion completa
+#
+# Levanta los cuatro contenedores del proyecto en la red soc-net:
+#   oracle   -> base de datos
+#   webapp   -> aplicacion bancaria (imagen propia)
+#   zap      -> escaner de vulnerabilidades web
+#   openvas  -> escaner de vulnerabilidades de infraestructura
+#
+# Uso:  docker compose up -d --wait
+# ============================================================
+
+include:
+  - ./oracle/docker-compose.yml
+  - ./webapp/docker-compose.yml
+  - ./zap/docker-compose.yml
+  - ./openvas/docker-compose.yml
