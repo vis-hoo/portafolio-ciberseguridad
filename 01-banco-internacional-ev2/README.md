@@ -1,44 +1,34 @@
-# Banco Internacional — EV-2
+# Banco Internacional EV-2
 
-Infraestructura de 4 contenedores Docker para el análisis de vulnerabilidades de una aplicación web bancaria, como parte de la Evaluación 2 de Gestión de Seguridad de la Información.
+Cuatro contenedores Docker que levantan una aplicación bancaria ficticia y dos escáneres de vulnerabilidades. Es el trabajo de la Evaluación 2 de Gestión de Seguridad de la Información.
 
-## Objetivo
+## Qué resuelve
 
-- Comunicar 4 contenedores en una red Docker (`soc-net`).
-- Crear una imagen propia para la aplicación web (Dockerfile).
-- Analizar vulnerabilidades con dos herramientas: OWASP ZAP y OpenVAS.
+La evaluación pide tres cosas: que los contenedores se comuniquen entre sí, una imagen propia construida con Dockerfile para la aplicación web, y un análisis de vulnerabilidades hecho con dos herramientas distintas.
 
 ## Arquitectura
 
+Tres de los cuatro contenedores son la infraestructura y el cuarto es una herramienta de escaneo por cada tipo de análisis.
+
 | Contenedor | Puerto | Rol |
 |------------|--------|-----|
-| `oracle` | 1521 | Base de datos Oracle (esquema `banco`) |
-| `webapp` | 8088 | Aplicación web bancaria (imagen propia) |
-| `zap` | 8080 | Escáner de vulnerabilidades web |
-| `openvas` | 9392 | Escáner de vulnerabilidades de infraestructura |
+| oracle | 1521 | Base de datos Oracle, esquema `banco` |
+| webapp | 8088 | Aplicación web bancaria, imagen propia |
+| zap | 8080 | Escáner de vulnerabilidades web |
+| openvas | 9392 | Escáner de vulnerabilidades de infraestructura |
 
-Red: `soc-net`. Diagrama: [`U2ES2.html`](U2ES2.html).
+Los cuatro viven en la red `soc-net`. El diagrama de la topología está en `U2ES2.html`.
 
-## Aplicación
+## La aplicación
 
-Banco ficticio **Banco Internacional** con dos roles:
+Banco Internacional es un banco ficticio con dos tipos de usuario. El cliente entra y ve su saldo, sus movimientos y sus préstamos, y puede depositar o retirar. El ejecutivo ve a todos los clientes y puede crear, editar y borrar clientes, préstamos y movimientos.
 
-- **Cliente**: consulta su saldo, movimientos y préstamos; realiza depósitos y retiros.
-- **Ejecutivo**: CRUD completo sobre clientes, préstamos y movimientos.
+La aplicación guarda a propósito varias vulnerabilidades, porque el objetivo de la evaluación es encontrarlas y proponer cómo corregirlas. Cada una queda registrada en el informe como estado inicial, antes de la mitigación.
 
-Vulnerabilidades intencionales, documentadas como "estado antes de mitigar".
+## Cómo está organizado el proyecto
 
-## Estructura
-
-```
-01-banco-internacional-ev2/
-├── docker/          # Dockerfiles y compose (raíz + uno por contenedor)
-├── docs/            # informe, tabla de vulnerabilidades, mitigación, evidencias
-├── scans/           # reportes de escáneres
-├── scripts/         # automatización de escáneres
-└── U2ES2.html       # diagrama de la arquitectura
-```
+`docker/` guarda los Dockerfile y los archivos compose, con uno por contenedor más uno en la raíz que levanta todo. `docs/` reúne el informe, la tabla de vulnerabilidades, el plan de mitigación y las capturas de pantalla. `scans/` contiene los reportes que producen los escáneres. `scripts/` tiene la automatización de los escaneos.
 
 ## Estado
 
-En desarrollo. Ver fases en el plan de ejecución.
+En desarrollo.
