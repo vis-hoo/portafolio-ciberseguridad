@@ -1,0 +1,13 @@
+# Dependencias
+node_modules/
+
+# Artefactos de escáneres temporales (los reportes finales en scans/ SÍ se versionan)
+.taste-skill/
+
+# Sistema
+.DS_Store
+*.log
+
+# Secrets locales (si se crean archivos de credenciales fuera del seed)
+.env
+docker/oracle/.env
