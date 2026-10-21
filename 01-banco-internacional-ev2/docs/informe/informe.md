@@ -16,7 +16,7 @@ El trabajo monta una infraestructura de cuatro contenedores Docker sobre una red
 
 La evaluación pide construir una infraestructura con Docker y analizarla con dos herramientas de seguridad distintas. Se eligió un escenario bancario ficticio, Banco Internacional, porque concentra los tres elementos que interesan: datos personales, dinero y dos niveles de privilegio.
 
-El proyecto tiene cuatro contenedores. Dos sostienen el servicio —la base de datos y la aplicación— y dos lo analizan: ZAP para la capa web y OpenVAS para la infraestructura. Los cuatro corren en la red `soc-net`, de modo que se hablan entre sí sin salir al exterior.
+El proyecto tiene cuatro contenedores. Dos sostienen el servicio (la base de datos y la aplicación) y dos lo analizan: ZAP para la capa web y OpenVAS para la infraestructura. Los cuatro corren en la red `soc-net`, de modo que se hablan entre sí sin salir al exterior.
 
 ---
 
@@ -26,7 +26,7 @@ Las seis definiciones que pide la evaluación, en el orden en que se usan al lev
 
 ### 2.1 Docker
 
-Docker es una plataforma que empaqueta una aplicación junto con todo lo que necesita para ejecutarse —bibliotecas, variables de entorno, sistema base— dentro de una unidad llamada contenedor. La diferencia con una máquina virtual está en el núcleo: la máquina virtual trae su propio sistema operativo completo, mientras que el contenedor comparte el núcleo del equipo anfitrión y solo carga lo que le falta. Eso lo hace mucho más liviano y rápido de arrancar.
+Docker es una plataforma que empaqueta una aplicación junto con todo lo que necesita para ejecutarse (bibliotecas, variables de entorno, sistema base) dentro de una unidad llamada contenedor. La diferencia con una máquina virtual está en el núcleo: la máquina virtual trae su propio sistema operativo completo, mientras que el contenedor comparte el núcleo del equipo anfitrión y solo carga lo que le falta. Eso lo hace mucho más liviano y rápido de arrancar.
 
 En este proyecto, Docker Desktop sobre Linux entrega el motor y la interfaz de línea de comandos con la que se levantó todo.
 
@@ -66,7 +66,7 @@ Los volúmenes se listan con `docker volume ls`.
 
 Una red de Docker conecta contenedores entre sí y les asigna nombres resolubles. Cuando varios contenedores están en la misma red, se encuentran por el nombre del servicio y no por una dirección IP, que puede cambiar.
 
-El proyecto define una red de puente llamada `soc-net`. Los cuatro contenedores están conectados a ella. Gracias a eso, la aplicación se conecta a la base con la cadena `oracle:1521/FREEPDB1` —`oracle` es el nombre del contenedor, no una IP— y los escáneres alcanzan la aplicación en `http://webapp:8088`.
+El proyecto define una red de puente llamada `soc-net`. Los cuatro contenedores están conectados a ella. Gracias a eso, la aplicación se conecta a la base con la cadena `oracle:1521/FREEPDB1` (`oracle` es el nombre del contenedor, no una IP) y los escáneres alcanzan la aplicación en `http://webapp:8088`.
 
 Las redes se listan con `docker network ls` y se inspeccionan con `docker network inspect`.
 
@@ -103,11 +103,11 @@ La evaluación pide una imagen construida con Dockerfile para la aplicación. Es
 
 El Dockerfile usa dos etapas. La primera instala las dependencias; la segunda copia solo lo necesario y arma la imagen final. La ventaja es que el resultado no carga las herramientas de compilación ni los archivos temporales de la instalación.
 
-**Etapa 1 — dependencias.** Parte de `node:22-alpine` y ejecuta `npm install --omit=dev`. Al copiar primero solo `package.json` y después el resto, la caché de capas se conserva: mientras no cambie la lista de dependencias, esta etapa no se repite.
+**Etapa 1: dependencias.** Parte de `node:22-alpine` y ejecuta `npm install --omit=dev`. Al copiar primero solo `package.json` y después el resto, la caché de capas se conserva: mientras no cambie la lista de dependencias, esta etapa no se repite.
 
-**Etapa 2 — imagen final.** Vuelve a partir de `node:22-alpine`, copia los `node_modules` de la etapa anterior y el código. Agrega las etiquetas `LABEL`, que quedan visibles con `docker inspect`, y define el `HEALTHCHECK` que consulta `/api/health` cada 30 segundos.
+**Etapa 2: imagen final.** Vuelve a partir de `node:22-alpine`, copia los `node_modules` de la etapa anterior y el código. Agrega las etiquetas `LABEL`, que quedan visibles con `docker inspect`, y define el `HEALTHCHECK` que consulta `/api/health` cada 30 segundos.
 
-Dos decisiones merecen mención. La primera: la imagen corre como el usuario `node`, que viene en la imagen base, no como `root`. Si alguien logra ejecutar código dentro del contenedor, no lo hace con privilegios de administrador. La segunda: el `HEALTHCHECK` le da a Docker una forma de saber si la aplicación está viva, y es lo que permite que `docker ps` muestre `healthy` en lugar de solo `Up`.
+Dos decisiones merecen mención. La imagen corre como el usuario `node`, que viene en la imagen base, y no como `root`, así que si alguien logra ejecutar código dentro del contenedor no lo hace con privilegios de administrador. El `HEALTHCHECK`, por su parte, le da a Docker una forma de saber si la aplicación está viva, y es lo que permite que `docker ps` muestre `healthy` en lugar de solo `Up`.
 
 La imagen se construye con:
 
@@ -138,11 +138,11 @@ app.use('/api/cliente', requiereSesion, clienteRoutes);              // cualquie
 app.use('/api/ejecutivo', requiereRol('ejecutivo'), ejecutivoRoutes); // solo ejecutivo
 ```
 
-Un cliente que intente llamar a una ruta de ejecutivo recibe una negativa del servidor, no de la interfaz. La comprobación ocurre en el backend, donde debe estar.
+Un cliente que intente llamar a una ruta de ejecutivo recibe una negativa del servidor. La comprobación ocurre en el backend, donde debe estar.
 
 ### Funcionalidad
 
-**Cliente.** Ve una sola cuenta, con su saldo, sus movimientos y sus préstamos. Registra depósitos y retiros. La cuenta se consulta con el identificador que quedó en su sesión, así que la consulta siempre devuelve la suya: no hay forma de pedir la cuenta de otro por la interfaz.
+**Cliente.** Ve una sola cuenta, con su saldo, sus movimientos y sus préstamos. Registra depósitos y retiros. La cuenta se consulta con el identificador que quedó en su sesión, así que la consulta siempre devuelve la suya.
 
 | Ruta | Método | Qué hace |
 |------|--------|----------|
@@ -208,7 +208,7 @@ Rastreó la aplicación, encontró las páginas públicas y el formulario de log
 | Informativa | Information Disclosure - Sensitive Information in URL | 2 | 598 |
 | Informativa | Authentication Request Identified | 1 | — |
 
-El patrón es claro: la aplicación no envía las cabeceras de seguridad que los navegadores esperan. Sin `Content-Security-Policy`, no hay una política que limite qué scripts pueden ejecutarse. Sin `X-Frame-Options`, la página se puede incrustar en un iframe ajeno. Sin `X-Content-Type-Options`, el navegador puede interpretar un archivo como un tipo distinto del declarado. Ninguna es una brecha por sí sola, pero las tres juntas ensanchan la superficie.
+El patrón es claro: la aplicación no envía las cabeceras de seguridad que los navegadores esperan. Sin `Content-Security-Policy`, no hay una política que limite qué scripts pueden ejecutarse. Sin `X-Frame-Options`, la página se puede incrustar en un iframe ajeno. Sin `X-Content-Type-Options`, el navegador puede interpretar un archivo como un tipo distinto del declarado. Ninguna abre una brecha por sí sola, pero las tres juntas ensanchan la superficie.
 
 Las dos alertas informativas apuntan a lo mismo desde otro ángulo: el servidor declara que corre Express, y las credenciales viajan en la URL del formulario, donde quedan registradas.
 
@@ -238,9 +238,9 @@ $ curl -s -X POST http://127.0.0.1:8088/api/login \
 {"ok":true,"rol":"cliente","username":"mgonzalez"}
 ```
 
-El resultado es doble. Por un lado, el atacante entra sin credenciales. Por otro, entra como un usuario distinto del que pidió: envió `ejecutivo` y la aplicación le respondió `cliente`. La inyección no solo salta la autenticación, sino que devuelve la primera fila que encuentra.
+El resultado es doble. El atacante entra sin credenciales, y además entra como un usuario distinto del que pidió: envió `ejecutivo` y la aplicación le respondió `cliente`. La inyección salta la autenticación y devuelve la primera fila que encuentra.
 
-ZAP no la ve porque el login entrega las credenciales en el cuerpo de la petición como JSON, y el conjunto de reglas por defecto no ataca ese formato sin configuración adicional. Vale la pena subrayarlo: un escáner automático es tan bueno como las reglas que trae. Cubre lo que ya conoce y deja pasar lo que no. Por eso el hallazgo más grave del trabajo lo encontró la revisión manual, no la herramienta.
+ZAP no la ve porque el login entrega las credenciales en el cuerpo de la petición como JSON, y el conjunto de reglas por defecto no ataca ese formato sin configuración adicional. Un escáner automático cubre lo que ya conoce y deja pasar lo que no. Por eso el hallazgo más grave del trabajo lo encontró la revisión manual, no la herramienta.
 
 El reporte completo de este escáner es `scans/zap-full.html`, y el de datos crudos, `scans/zap-full.json`. La interfaz de ZAP en el contenedor se ve en `docs/evidencias/03-zap-api.png`.
 
@@ -266,7 +266,7 @@ Perfil **Discovery** sobre los 5836 puertos TCP asignados por IANA. Duró 72 seg
 | Informativa | 0.0 | general/tcp | OS Detection Consolidation and Reporting |
 | Informativa | 0.0 | general/tcp | Traceroute |
 
-El escáner encontró el puerto 8088 abierto y lo identificó como Express sobre HTTP. Desde el punto de vista de quien busca atacar, eso ya es información: acota la superficie y nombra la tecnología. Los demás hallazgos registran cómo OpenVAS llegó hasta ahí y el ICMP timestamp, que revela el reloj del equipo.
+El escáner encontró el puerto 8088 abierto y lo identificó como Express sobre HTTP. Para quien busca atacar, eso acota la superficie y nombra la tecnología. Los demás hallazgos registran cómo OpenVAS llegó hasta ahí y el ICMP timestamp, que revela el reloj del equipo.
 
 ### Escáner 2: completo
 
@@ -314,9 +314,9 @@ Los trece hallazgos del trabajo, ordenados por severidad. La columna *Detectado 
 | 12 | Cabecera `X-Powered-By` revela Express | Baja | ZAP (CWE 497) | webapp |
 | 13 | Portafolio de servicios expuesto (Express en 8088) | Informativa | OpenVAS | webapp |
 
-El reparto llama la atención. Los escáneres automáticos, entre los dos y con cuatro corridas, detectaron ocho hallazgos: cinco solo ZAP, dos solo OpenVAS y uno los dos. La revisión manual del código aportó los cinco restantes. La inyección SQL, la única de severidad alta que permite entrar sin credenciales, no está en ninguno de los cuatro reportes.
+El reparto merece un comentario. Los escáneres automáticos, entre los dos y con cuatro corridas, detectaron ocho hallazgos: cinco solo ZAP, dos solo OpenVAS y uno los dos. La revisión manual del código aportó los cinco restantes. La inyección SQL, la única de severidad alta que permite entrar sin credenciales, no está en ninguno de los cuatro reportes.
 
-Los dos escáneres coinciden en un punto: las credenciales viajan sin protección. ZAP lo ve en la URL y OpenVAS en el transporte. Que dos herramientas con métodos distintos lleguen al mismo hallazgo lo hace más sólido que si lo reportara una sola.
+Los dos escáneres coinciden en un punto: las credenciales viajan sin protección. ZAP lo ve en la URL y OpenVAS en el transporte. Dos herramientas con métodos distintos llegan al mismo hallazgo, y eso lo hace más sólido que si lo reportara una sola.
 
 
 ---
@@ -327,21 +327,21 @@ Cada hallazgo se corrige en la capa que le corresponde, no donde se detectó. Qu
 
 Las correcciones se agrupan en dos bloques. El primero resuelve el riesgo real; el segundo endurece la superficie.
 
-**Bloque 1 — riesgo real.**
+**Bloque 1: riesgo real.**
 
 1. **Inyección SQL en el login.** La consulta se arma concatenando los datos del formulario. La corrección es usar enlaces en la consulta, como ya se hace en el resto de las rutas: `WHERE username = :usuario AND password_hash = :hash`. Es un cambio de una línea y elimina el problema de raíz: el motor trata los valores como datos, no como instrucciones.
 
-2. **Contraseñas en texto plano.** Hoy la tabla `usuarios` guarda las contraseñas legibles. Cualquiera con acceso de lectura —o con la inyección del punto anterior— obtiene todas las credenciales de golpe. Se corrige guardando un hash con `bcrypt` y comparando con `bcrypt.compare` en el login.
+2. **Contraseñas en texto plano.** Hoy la tabla `usuarios` guarda las contraseñas legibles. Cualquiera con acceso de lectura, o con la inyección del punto anterior, obtiene todas las credenciales de golpe. Se corrige guardando un hash con `bcrypt` y comparando con `bcrypt.compare` en el login.
 
 3. **Sin límite de intentos.** Se puede probar contraseñas sin freno. Se corrige limitando los intentos por usuario y por origen con `express-rate-limit`, más un bloqueo temporal tras varios fallos.
 
 4. **Cookie de sesión desprotegida.** La cookie se emite con `httpOnly: false` y el secreto de firma está escrito en el código. El primer valor permite que un script inyectado lea la sesión; el segundo permite falsificarla. Se corrige con `httpOnly: true`, `secure: true`, `sameSite: 'strict'` y el secreto en una variable de entorno.
 
-**Bloque 2 — endurecimiento.**
+**Bloque 2: endurecimiento.**
 
 5. **Cabeceras de seguridad.** Se agrega `helmet` al arranque de Express, que trae `Content-Security-Policy`, `X-Frame-Options` y `X-Content-Type-Options` con valores por defecto razonables.
 
-6. **Fuga de información.** Se desactiva la cabecera `X-Powered-By` —`helmet` ya lo hace— y el formulario de login pasa de `GET` a `POST`, para que las credenciales no queden en la URL.
+6. **Fuga de información.** Se desactiva la cabecera `X-Powered-By` (`helmet` ya lo hace) y el formulario de login pasa de `GET` a `POST`, para que las credenciales no queden en la URL.
 
 | # | Vulnerabilidad | Impacto | Esfuerzo | Prioridad |
 |---|----------------|---------|----------|-----------|
@@ -352,7 +352,7 @@ Las correcciones se agrupan en dos bloques. El primero resuelve el riesgo real; 
 | 5 | Cabeceras de seguridad ausentes | Medio | Bajo | Media |
 | 6 | Fuga en cabecera y URL | Bajo | Bajo | Media |
 
-Las cuatro primeras se corrigen en una misma sesión de trabajo y resuelven el grueso del riesgo. El punto 4 merece una nota: además de proteger la cookie, sostiene el aislamiento entre clientes. Hoy ese aislamiento depende de que el identificador de sesión sea de fiar; si la sesión se puede manipular, la frontera entre una cuenta y otra se cae. No es un problema aparte, es una consecuencia del punto 4.
+Las cuatro primeras se corrigen en una misma sesión de trabajo y resuelven el grueso del riesgo. El punto 4 merece una nota: además de proteger la cookie, sostiene el aislamiento entre clientes. Hoy ese aislamiento depende de que el identificador de sesión sea de fiar; si la sesión se puede manipular, la frontera entre una cuenta y otra se cae.
 
 ---
 
@@ -360,15 +360,13 @@ Las cuatro primeras se corrigen en una misma sesión de trabajo y resuelven el g
 
 El trabajo montó una infraestructura de cuatro contenedores sobre una red propia y la analizó con dos herramientas. Las dos partes funcionan: los contenedores se comunican entre sí por nombre, la aplicación corre desde una imagen construida en el proyecto, y los dos escáneres alcanzan la aplicación desde dentro de la misma red.
 
-Tres cosas quedaron claras al hacerlo.
+La red es lo que hace posible el resto. Sin `soc-net`, la aplicación tendría que buscar la base por una dirección IP que cambia, y los escáneres no tendrían a quién apuntar. Los nombres de servicio convierten una configuración frágil en una estable.
 
-**La primera: la red es lo que hace posible el resto.** Sin `soc-net`, la aplicación tendría que buscar la base por una dirección IP que cambia, y los escáneres no tendrían a quién apuntar. Los nombres de servicio convierten una configuración frágil en una estable.
+Una imagen propia también exige decisiones que van más allá de empaquetar. El Dockerfile de dos etapas, el usuario sin privilegios y el `HEALTHCHECK` afectan a la seguridad y a la operación. Que el contenedor corra como `node` y no como `root` no cambia nada mientras todo va bien, y lo cambia todo cuando algo va mal.
 
-**La segunda: una imagen propia no es solo empaquetar.** El Dockerfile de dos etapas, el usuario sin privilegios y el `HEALTHCHECK` son decisiones que afectan a la seguridad y a la operación. Que el contenedor corra como `node` y no como `root` no cambia nada mientras todo va bien, y lo cambia todo cuando algo va mal.
+Lo más importante que quedó del análisis es que el escáner automático no encontró el fallo más grave. ZAP reportó cabeceras ausentes y fugas de información, todas reales, todas de severidad media o baja. La inyección SQL del login, que permite entrar sin credenciales, no apareció en el reporte y la encontró la revisión manual del código. Un escáner prueba lo que sabe probar, y por eso se configura y se complementa, no se delega.
 
-**La tercera, y la más importante: el escáner automático no encontró el fallo más grave.** ZAP reportó cabeceras ausentes y fugas de información, todas reales, todas de severidad media o baja. La inyección SQL del login, que permite entrar sin credenciales, no apareció en el reporte. La encontró la revisión manual del código. Esto no descalifica a ZAP: lo ubica. Un escáner prueba lo que sabe probar, y por eso se configura y se complementa, no se delega.
-
-El plan de mitigación cierra los hallazgos en dos bloques. Las cuatro correcciones del primero son pequeñas y resuelven el grueso del riesgo. La lección que queda es que el orden importa más que la cantidad: arreglar la inyección y las contraseñas vale más que sumar veinte cabeceras.
+El plan de mitigación cierra los hallazgos en dos bloques. Las cuatro correcciones del primero son pequeñas y resuelven el grueso del riesgo: arreglar la inyección y las contraseñas rinde más que sumar veinte cabeceras.
 
 ---
 
