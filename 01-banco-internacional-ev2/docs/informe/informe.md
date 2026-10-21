@@ -93,7 +93,7 @@ Los cuatro están conectados a la red de puente `soc-net`. La aplicación se con
 
 La red se verifica con `docker network inspect soc-net`, que muestra los cuatro contenedores conectados y la dirección que recibió cada uno. La comunicación interna se comprueba resolviendo un nombre desde dentro de un contenedor: `docker exec banco-webapp node -e "require('dns').lookup('oracle', ...)"` devuelve la dirección de la base.
 
-![Contenedores, red y volúmenes del proyecto](evidencias/01-landing.png)
+![Contenedores, red y volúmenes del proyecto](../evidencias/01-landing.png)
 
 Las capturas completas de la orquestación y de la conectividad interna están en los registros `docs/evidencias/fase-4-orquestacion.txt` y `docs/evidencias/fase-4-conectividad.txt`.
 
@@ -169,19 +169,19 @@ _(insertar diagrama del modelo: `clientes`, `cuentas`, `prestamos`, `movimientos
 
 ### Capturas
 
-![Página inicial del banco](evidencias/01-landing.png)
+![Página inicial del banco](../evidencias/01-landing.png)
 
 *Figura 1.* Página inicial de Banco Internacional.
 
-![Formulario de inicio de sesión](evidencias/02-login.png)
+![Formulario de inicio de sesión](../evidencias/02-login.png)
 
 *Figura 2.* Formulario de inicio de sesión.
 
-![Panel del cliente](evidencias/05-panel-cliente.png)
+![Panel del cliente](../evidencias/05-panel-cliente.png)
 
 *Figura 3.* Panel del cliente, con saldo, préstamos y movimientos.
 
-![Panel del ejecutivo](evidencias/06-panel-ejecutivo.png)
+![Panel del ejecutivo](../evidencias/06-panel-ejecutivo.png)
 
 *Figura 4.* Panel del ejecutivo, con la lista de clientes.
 
@@ -285,7 +285,7 @@ El hallazgo de severidad media es el que importa. OpenVAS identificó el campo `
 
 ZAP reporta la misma debilidad por otro camino: la llama *Information Disclosure - Sensitive Information in URL* y la encuentra en la URL. OpenVAS la ve en el transporte. Dos herramientas independientes, dos métodos distintos, el mismo problema.
 
-![Interfaz de OpenVAS](evidencias/07-openvas-ui.png)
+![Interfaz de OpenVAS](../evidencias/07-openvas-ui.png)
 
 *Figura 5.* Interfaz web de OpenVAS en el puerto 9392.
 

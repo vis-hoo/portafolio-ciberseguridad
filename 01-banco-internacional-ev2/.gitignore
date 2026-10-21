@@ -8,6 +8,9 @@ node_modules/
 .DS_Store
 *.log
 
+# Documentos de entrega (el .docx del informe es para la evaluacion, no se versiona)
+*.docx
+
 # Secrets locales (si se crean archivos de credenciales fuera del seed)
 .env
 docker/oracle/.env
