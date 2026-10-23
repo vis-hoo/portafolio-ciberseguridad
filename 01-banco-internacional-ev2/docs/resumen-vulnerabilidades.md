@@ -15,7 +15,7 @@ ZAP corrió dos escáneres sobre la aplicación, en `http://webapp:8088` desde d
 
 ### Escáner 1: pasivo (`zap-baseline.json`)
 
-Rastrea la aplicación y revisa las respuestas sin lanzar ataques. Detectó **7 tipos de alerta** en 20 instancias.
+Rastrea la aplicación y revisa las respuestas sin lanzar ataques. Detectó **7 tipos de alerta** en 23 instancias.
 
 | Riesgo | Alerta | Instancias | CWE |
 |--------|--------|-----------:|-----|
@@ -55,7 +55,7 @@ OpenVAS corre dos escáneres contra `webapp` desde dentro de la red `soc-net`. S
 
 ### Escáner 1: reconocimiento (`openvas-rapido.xml`)
 
-Perfil **Discovery** sobre los 5836 puertos TCP asignados por IANA. Duró 72 segundos y devolvió 8 hallazgos.
+Perfil **Discovery** sobre los 5836 puertos TCP asignados por IANA. Duró 72 segundos y devolvió 8 resultados, que corresponden a 6 hallazgos distintos.
 
 | Nivel | Sev. | Puerto | Hallazgo |
 |-------|-----:|--------|----------|
@@ -70,7 +70,7 @@ El escáner reconoce el servicio: encuentra el puerto 8088 abierto y lo identifi
 
 ### Escáner 2: completo (`openvas-completo.xml`)
 
-Perfil **Full and fast** sobre todos los TCP y los 100 UDP más comunes de Nmap. Duró 6 minutos 11 segundos y devolvió 10 hallazgos. Aquí sí aparece lo que el reconocimiento solo insinuaba.
+Perfil **Full and fast** sobre todos los TCP y los 100 UDP más comunes de Nmap. Duró 6 minutos 11 segundos y devolvió 10 resultados, que corresponden a 6 hallazgos distintos. Aquí sí aparece lo que el reconocimiento solo insinuaba.
 
 | Nivel | Sev. | Puerto | Hallazgo |
 |-------|-----:|--------|----------|
