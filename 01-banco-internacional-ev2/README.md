@@ -18,7 +18,6 @@ Infraestructura con cuatro contenedores Docker sobre la red `soc-net`: Oracle Fr
 │   ├── diagramas/     # Diagramas (topología/ER)
 │   ├── resumen-vulnerabilidades.md
 │   ├── mitigacion.md
-│   └── demo-y-traslado.md
 ├── scans/             # Reportes ZAP (JSON/HTML) y OpenVAS (XML)
 ├── scripts/           # run-zap-scans.sh, run-openvas-scans.sh, resumir-*.py
 └── U2ES2.html         # Diagrama de topología
@@ -55,5 +54,4 @@ python3 scripts/resumir-openvas.py
 - [Resumen de vulnerabilidades](docs/resumen-vulnerabilidades.md)
 - [Plan de mitigación](docs/mitigacion.md)
 - [Diagrama entidad-relación](docs/diagramas/entidad-relacion.md)
-- [Guía demo y traslado](docs/demo-y-traslado.md)
 - [Diagrama de topología](U2ES2.html)
