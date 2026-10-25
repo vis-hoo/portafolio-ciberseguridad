@@ -7,11 +7,9 @@ Infraestructura con cuatro contenedores Docker sobre la red `soc-net`: Oracle Fr
 ```text
 01-banco-internacional-ev2/
 ├── docker/
-│   ├── docker-compose.yml
+│   ├── docker-compose.yml   # Definición única de los 4 servicios
 │   ├── oracle/        # Init SQL, esquema banco
-│   ├── webapp/        # App Node.js/Express + Dockerfile
-│   ├── zap/           # Configuración ZAP
-│   └── openvas/       # Configuración OpenVAS
+│   └── webapp/        # App Node.js/Express + Dockerfile
 ├── docs/
 │   ├── informe/       # Informe EV2 (PDF)
 │   ├── evidencias/    # Capturas y verificaciones
@@ -29,6 +27,10 @@ Infraestructura con cuatro contenedores Docker sobre la red `soc-net`: Oracle Fr
 docker compose -f docker/docker-compose.yml up -d
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 ```
+
+El archivo `docker/docker-compose.yml` es autocontenido: define los cuatro servicios, los volúmenes y la red, sin `include:`. El servicio `webapp` declara `pull_policy: build`, así que Compose construye la imagen propia en lugar de buscarla en un registro.
+
+La primera vez se descargan las imágenes base (Oracle, ZAP y OpenVAS suman varios GB) y la construcción de la aplicación toma unos minutos.
 
 Accesos:
 - Aplicación web: http://localhost:8088

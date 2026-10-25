@@ -10,8 +10,100 @@
 # Uso:  docker compose up -d --wait
 # ============================================================
 
-include:
-  - ./oracle/docker-compose.yml
-  - ./webapp/docker-compose.yml
-  - ./zap/docker-compose.yml
-  - ./openvas/docker-compose.yml
+name: banco-internacional-ev2
+
+services:
+  oracle:
+    image: gvenzl/oracle-free:23-slim
+    container_name: banco-oracle
+    restart: unless-stopped
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-Banco2026}
+      APP_USER: banco
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD:-banco2026}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./oracle/init:/container-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+    networks:
+      - soc-net
+
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    image: banco-internacional-web:1.0.0
+    # pull_policy: build obliga a Compose a construir la imagen en lugar
+    # de buscar banco-internacional-web en un registro. Sin esto, en
+    # equipos que no tienen la imagen construida el arranque falla con
+    # "pull access denied".
+    pull_policy: build
+    container_name: banco-webapp
+    restart: unless-stopped
+    environment:
+      PORT: 8088
+      DB_USER: ${DB_USER:-banco}
+      DB_PASSWORD: ${DB_PASSWORD:-banco2026}
+      DB_CONNECT_STRING: ${DB_CONNECT_STRING:-oracle:1521/FREEPDB1}
+    ports:
+      - "8088:8088"
+    networks:
+      - soc-net
+
+  zap:
+    image: zaproxy/zap-stable:latest
+    container_name: banco-zap
+    restart: unless-stopped
+    # ZAP arranca como daemon con el API habilitado. No se usa clave
+    # para poder automatizar los escaneos desde los scripts: es una
+    # decision de laboratorio, y deja el API expuesto sin autenticacion.
+    command: >
+      zap.sh -daemon -host 0.0.0.0 -port 8080
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config api.disablekey=true
+    ports:
+      - "8080:8080"
+    networks:
+      - soc-net
+
+  openvas:
+    image: immauss/openvas:latest
+    container_name: banco-openvas
+    restart: unless-stopped
+    environment:
+      # La imagen ya trae un feed de vulnerabilidades reciente. Con
+      # SKIPSYNC en true se usa ese feed y el contenedor queda listo
+      # en pocos minutos. Con SKIPSYNC en false se sincroniza el feed
+      # completo desde Greenbone, que en la primera ejecucion tarda
+      # entre una y dos horas.
+      #
+      # Para el laboratorio se usa el feed de la imagen. Si se quiere
+      # actualizar, basta con poner SKIPSYNC en false y dejar que
+      # termine la sincronizacion.
+      SKIPSYNC: "true"
+      # Sin HTTPS: el laboratorio no expone la interfaz fuera de la red.
+      HTTPS: "false"
+    ports:
+      - "9392:9392"
+    volumes:
+      # Un solo volumen: la imagen conserva ahi todo el estado de
+      # Greenbone (certificados, base de datos y feed).
+      - openvas-data:/data
+    networks:
+      - soc-net
+
+volumes:
+  oracle-data:
+  openvas-data:
+
+networks:
+  soc-net:
+    name: soc-net
