@@ -35,7 +35,7 @@ La primera vez se descargan las imágenes base (Oracle, ZAP y OpenVAS suman vari
 Accesos:
 - Aplicación web: http://localhost:8088
 - OWASP ZAP: http://localhost:8080
-- OpenVAS/GVM: https://localhost:9392
+- OpenVAS/GVM: http://localhost:9392
 
 ## Escaneos
 
